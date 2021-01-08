@@ -5,9 +5,8 @@ from collections import OrderedDict
 from django.core.mail import EmailMessage
 from django.utils import timezone
 from django.db.models import Count, Q
-from django.db.models.functions import Now
 from django.contrib.auth import get_user_model
-from rest_framework import views, viewsets, authentication, filters
+from rest_framework import views, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -19,11 +18,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_csv import renderers as csv_renderers
 from whispersapi.serializers import *
 from whispersapi.models import *
+from whispersapi.globals import *
 from whispersapi.filters import *
 from whispersapi.permissions import *
 from whispersapi.pagination import *
 from whispersapi.authentication import *
-from whispersapi.immediate_tasks import *
 from dry_rest_permissions.generics import DRYPermissions
 User = get_user_model()
 
@@ -54,34 +53,6 @@ class PlainTextParser(BaseParser):
         if (text.startswith('"') and text.endswith('"')) or (text.startswith("'") and text.endswith("'")):
             text = text[1:-1]
         return text
-
-
-PK_REQUESTS = ['retrieve', 'update', 'partial_update', 'destroy']
-LIST_DELIMITER = ','
-
-whispers_email_address = Configuration.objects.filter(name='whispers_email_address').first()
-if whispers_email_address:
-    if whispers_email_address.value.count('@') == 1:
-        EMAIL_WHISPERS = whispers_email_address.value
-    else:
-        EMAIL_WHISPERS = settings.EMAIL_WHISPERS
-        encountered_type = type(whispers_email_address.value).__name__
-        send_wrong_type_configuration_value_email('whispers_email_address', encountered_type, 'email_address')
-else:
-    EMAIL_WHISPERS = settings.EMAIL_WHISPERS
-    send_missing_configuration_value_email('whispers_email_address')
-
-nwhc_org_record = Configuration.objects.filter(name='nwhc_organization').first()
-if nwhc_org_record:
-    if nwhc_org_record.value.isdecimal():
-        NWHC_ORG_ID = int(nwhc_org_record.value)
-    else:
-        NWHC_ORG_ID = settings.NWHC_ORG_ID
-        encountered_type = type(nwhc_org_record.value).__name__
-        send_wrong_type_configuration_value_email('nwhc_organization', encountered_type, 'int')
-else:
-    NWHC_ORG_ID = settings.NWHC_ORG_ID
-    send_missing_configuration_value_email('nwhc_organization')
 
 
 def update_modified_fields(obj, request):

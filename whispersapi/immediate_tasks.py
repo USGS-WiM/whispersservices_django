@@ -4,6 +4,7 @@ from datetime import datetime
 from rest_framework.settings import api_settings
 from django.core.mail import EmailMultiAlternatives
 from whispersapi.models import *
+from whispersapi.globals import *
 
 
 def jsonify_errors(data):
@@ -70,38 +71,6 @@ def send_wrong_type_configuration_value_email(record_name, encountered_type, exp
     body += " Problem encountered at " + datetime.now().strftime("%m/%d/%Y %H:%M:%S") + ". " + message
     notif_email = construct_notification_email(recip, subject, body, False)
     print(notif_email.__dict__)
-
-
-whispers_admin_user_record = Configuration.objects.filter(name='whispers_admin_user').first()
-if whispers_admin_user_record:
-    if whispers_admin_user_record.value.isdecimal():
-        WHISPERS_ADMIN_USER_ID = int(whispers_admin_user_record.value)
-    else:
-        WHISPERS_ADMIN_USER_ID = settings.WHISPERS_ADMIN_USER_ID
-        encountered_type = type(whispers_admin_user_record.value).__name__
-        send_wrong_type_configuration_value_email('whispers_admin_user', encountered_type, 'int')
-else:
-    WHISPERS_ADMIN_USER_ID = settings.WHISPERS_ADMIN_USER_ID
-    send_missing_configuration_value_email('whispers_admin_user')
-
-whispers_email_address = Configuration.objects.filter(name='whispers_email_address').first()
-if whispers_email_address:
-    if whispers_email_address.value.count('@') == 1:
-        EMAIL_WHISPERS = whispers_email_address.value
-    else:
-        EMAIL_WHISPERS = settings.EMAIL_WHISPERS
-        encountered_type = type(whispers_email_address.value).__name__
-        send_wrong_type_configuration_value_email('whispers_email_address', encountered_type, 'email_address')
-else:
-    EMAIL_WHISPERS = settings.EMAIL_WHISPERS
-    send_missing_configuration_value_email('whispers_email_address')
-
-email_boilerplate_record = Configuration.objects.filter(name='email_boilerplate').first()
-if email_boilerplate_record:
-    EMAIL_BOILERPLATE = email_boilerplate_record.value
-else:
-    EMAIL_BOILERPLATE = settings.EMAIL_BOILERPLATE
-    send_missing_configuration_value_email('email_boilerplate')
 
 
 def construct_notification_email(recipient_email, subject, html_body, include_boilerplate=True):
